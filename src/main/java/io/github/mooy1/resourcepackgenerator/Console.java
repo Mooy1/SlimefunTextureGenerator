@@ -21,7 +21,7 @@ public final class Console {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setBackground(Color.LIGHT_GRAY);
-        frame.setTitle("Resource Pack Generator");
+        frame.setTitle("Slimefun Texture Generator");
         int width = 1200;
         int height = 800;
         frame.setSize(width, height);
@@ -29,13 +29,14 @@ public final class Console {
         frame.setResizable(true);
 
         // add icon
-        // ImageIcon icon = new ImageIcon("resources/");
+        // ImageIcon icon = new ImageIcon("");
         // frame.setIconImage(icon.getImage());
         
         // add output area
         JTextArea output = this.output = new JTextArea();
         output.setEditable(false);
         output.setOpaque(false);
+        output.setFont(output.getFont().deriveFont(12f));
         frame.add(output, BorderLayout.NORTH);
         
         // show
