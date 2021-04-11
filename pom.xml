@@ -15,21 +15,6 @@
         <author>Mooy1</author>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
     <build>
         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
         <defaultGoal>clean package</defaultGoal>
@@ -60,7 +45,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.github.mooy1.resourcepackgenerator.ResourcePackGenerator</mainClass>
+                            <mainClass>io.github.mooy1.resourcepackgenerator.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

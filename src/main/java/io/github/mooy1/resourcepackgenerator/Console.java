@@ -3,21 +3,18 @@ package io.github.mooy1.resourcepackgenerator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
+import javax.swing.JTextArea;
 import javax.swing.UIManager;
 
-public final class ConsoleWindow {
+public final class Console {
     
-    private JTextPane output;
+    private final JTextArea output;
     
-    public ConsoleWindow() {
-        // set look and feel
+    public Console() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             System.exit(1);
-            return;
         }
         
         // create frame
@@ -25,28 +22,34 @@ public final class ConsoleWindow {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setBackground(Color.LIGHT_GRAY);
         frame.setTitle("Resource Pack Generator");
-        frame.setSize(720, 480);
-        frame.setLocation(600, 300);
+        int width = 1200;
+        int height = 800;
+        frame.setSize(width, height);
+        frame.setLocation(960 - width / 2, 540 - height / 2);
         frame.setResizable(true);
-        frame.setVisible(true);
 
         // add icon
-        //ImageIcon icon = new ImageIcon("resources/");
-        //frame.setIconImage(icon.getImage());
-
+        // ImageIcon icon = new ImageIcon("resources/");
+        // frame.setIconImage(icon.getImage());
+        
         // add output area
-        JTextPane output = this.output = new JTextPane();
+        JTextArea output = this.output = new JTextArea();
         output.setEditable(false);
         output.setOpaque(false);
         frame.add(output, BorderLayout.NORTH);
         
-        // add scroll bar
-        JScrollPane scroll = new JScrollPane();
-        frame.add(scroll, BorderLayout.EAST);
+        // show
+        frame.setVisible(true);
     }
     
-    public void print(String string) {
-        
+    public synchronized void status(String msg) throws InterruptedException {
+        wait(1);
+        this.output.append(msg + "\n\n");
+        wait(1);
+    }
+    
+    public void print(String msg) {
+        this.output.append(msg + "\n");
     }
     
 }
