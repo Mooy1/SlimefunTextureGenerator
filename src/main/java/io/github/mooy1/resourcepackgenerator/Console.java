@@ -44,9 +44,9 @@ public final class Console {
     }
     
     public synchronized void status(String msg) throws InterruptedException {
-        wait(1);
+        wait(100);
         this.output.append(msg + "\n\n");
-        wait(1);
+        wait(100);
     }
     
     public void print(String msg) {
