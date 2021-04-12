@@ -4,7 +4,7 @@ This generator will create a texture pack and generate properties files for item
 
 It is for Optifine only!
 
-Latest Download: coming soon
+Latest Download: https://github.com/Mooy1/SlimefunTextureGenerator/releases/download/1.0/SlimefunTextureGenerator.v1.0.jar
 
 # How to use
 
