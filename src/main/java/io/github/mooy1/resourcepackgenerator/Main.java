@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -27,7 +27,7 @@ public final class Main {
             }
             console.status("\nPlease report this error on Github or Discord.");
         }
-        console.status("Close the window to exit...");
+        console.status("Close the window to exit.");
     }
 
     private static void createPack(Console console) throws Exception {
@@ -38,10 +38,10 @@ public final class Main {
 
         // load config
         console.status("Loading Config...");
-        File configFile = new File("pack-config.yml");
+        File configFile = new File("pack.properties");
         if (!configFile.exists()) {
-            console.status("Saving default config as 'pack-config.yml'...");
-            String defaultConfig = "name: CHANGE ME\ndescription: CHANGE ME\n";
+            console.status("Saving default config as 'pack.properties'...");
+            String defaultConfig = "name=CHANGE ME\ndescription=CHANGE ME\n";
             Files.write(configFile.toPath(), defaultConfig.getBytes());
             console.status("Make sure to setup the config before running again!");
             return;
@@ -49,41 +49,73 @@ public final class Main {
 
         // read config
         console.status("Reading config...");
-        InputStream input = new FileInputStream(configFile);
-        byte[] buff = new byte[input.available()];
-        input.read(buff);
-        input.close();
-        String[] lines = new String(buff).split("\n");
-        if (lines.length < 2) {
-            console.status("Invalid Config! Delete it to generate a new one!");
+        Properties config = new Properties();
+        config.load(new FileInputStream(configFile));
+        String name = config.getProperty("name");
+        if (name == null) {
+            console.status("No name found in pack.properties file! Add one and run again.");
             return;
         }
-        String name = lines[0].replace("name: ", "");
-        String desc = lines[1].replace("description: ", "");
+        String desc = config.getProperty("description");
+        if (desc == null) {
+            console.status("No description found in pack.properties file! Add one and run again.");
+            return;
+        }
         console.print("Pack Name: " + name);
         console.print("Pack Description: " + desc + "\n");
 
-        // load textures
-        console.status("Loading textures...");
-        Set<File> textures = new HashSet<>();
-        searchForTextures(Pattern.compile("\\w+.png"), configFile.getAbsoluteFile().getParentFile(), textures);
+        // load icon
+        console.status("Locating pack icon...");
         File packPNG = new File("pack.png");
         if (!packPNG.exists()) {
             console.status("Missing pack.png image, add one to show in your pack!");
             return;
         }
 
+        // load item textures
+        console.status("Locating item textures...");
+        File textureFolder = new File("textures");
+        File itemsFolder = new File(textureFolder, "items");
+        if (!textureFolder.exists() || !textureFolder.isDirectory()) {
+            console.status("Couldn't find 'textures' folder! An empty one has been created to add textures to!");
+            Files.createDirectories(itemsFolder.toPath());
+            return;
+        }
+        if (!itemsFolder.exists() || !itemsFolder.isDirectory()) {
+            console.status("Couldn't find 'items' folder under 'textures' folder! An empty one has been created to add textures to!");
+            Files.createDirectories(itemsFolder.toPath());
+            return;
+        }
+        List<File> itemTextures = new ArrayList<>();
+        searchForTextures(Pattern.compile("\\w+\\.\\w+\\.png"), console, itemsFolder, itemTextures);
+
+        // load other textures
+        console.status("Locating other files...");
+        List<File> otherFiles = new ArrayList<>();
+        for (File file : Objects.requireNonNull(textureFolder.listFiles())) {
+            if (file.isDirectory()) {
+                if (!file.getName().equals("items")) {
+                    searchForFiles(file, otherFiles);
+                }
+            } else {
+                otherFiles.add(file);
+            }
+        }
+
         // prepare zip folder
-        console.status("Preparing pack folder...");
+        console.status("Preparing zip folder...");
         File pack = new File(name + ".zip");
         if (pack.exists()) {
             pack.delete();
         }
         ZipOutputStream zop = new ZipOutputStream(new FileOutputStream(pack));
 
-        // copying and creating files
-        console.status("Creating, copying, and zipping texture files...");
+        // pack icon
+        console.status("Copying pack.png...");
         addZipEntry("pack.png", packPNG, zop);
+
+        // pack mcmeta
+        console.status("Creating pack.mcmeta...");
         String mcmMeta = "{\n" +
                 "\t\"pack\":{\n" +
                 "\t\t\"pack_format\":6,\n" +
@@ -91,13 +123,24 @@ public final class Main {
                 "\t}\n" +
                 "}";
         addZipEntry("pack.mcmeta", mcmMeta.getBytes(), zop);
-        for (File file : textures) {
-            String id = file.getName().substring(0, file.getName().length() - 4).toUpperCase(Locale.ROOT);
-            addZipEntry("minecraft/optifine/cit/" + id + ".png", file, zop);
-            String props = "type=item\n" +
-                    "items=iron_ingot\n" + // TODO add
-                    "nbt.PublicBukkitValues.*=slimefun:slimefun_item:" + id; // TODO test
-            addZipEntry("minecraft/optifine/cit/" + id + ".properties", props.getBytes(), zop);
+
+        // textures
+        console.status("Copying and creating files for " + itemTextures.size() + " item texture(s)...");
+        String texturePath = "assets/minecraft/optifine/cit/";
+        for (File file : itemTextures) {
+            String[] split = file.getName().substring(0, file.getName().length() - 4).toLowerCase(Locale.ROOT).split("\\.");
+            addZipEntry(texturePath + split[0] + ".png", file, zop);
+            String props = "# Generated by https://github.com/Mooy1/SlimefunTextureGenerator\n" +
+                    "type=item\n" +
+                    "items=" + split[1] + "\n" +
+                    "nbt.PublicBukkitValues.slimefun\\:slimefun_item=" + split[0].toUpperCase(Locale.ROOT);
+            addZipEntry(texturePath + split[0] + ".properties", props.getBytes(), zop);
+        }
+
+        // other files
+        console.status("Copying " + otherFiles.size() + " other file(s)...");
+        for (File file : otherFiles) {
+            addZipEntry(texturePath + file.getName(), file, zop);
         }
         zop.close();
 
@@ -119,12 +162,24 @@ public final class Main {
         zop.closeEntry();
     }
 
-    private static void searchForTextures(Pattern textureMatcher, File folder, Set<File> textures) {
+    private static void searchForTextures(Pattern pattern, Console console, File folder, List<File> textures) throws InterruptedException {
         for (File file : Objects.requireNonNull(folder.listFiles())) {
             if (file.isDirectory()) {
-                searchForTextures(textureMatcher, file, textures);
-            } else if (textureMatcher.matcher(file.getName()).matches() && !file.getName().equals("pack.png")) {
+                searchForTextures(pattern, console, file, textures);
+            } else if (pattern.matcher(file.getName()).matches()) {
                 textures.add(file);
+            } else {
+                console.status("Item texture '" + file.getName() + "' has an invalid name, format is: '[slimefun_id].[minecraft_material].png'");
+            }
+        }
+    }
+
+    private static void searchForFiles(File folder, List<File> files) {
+        for (File file : Objects.requireNonNull(folder.listFiles())) {
+            if (file.isDirectory()) {
+                searchForFiles(folder, files);
+            } else {
+                files.add(file);
             }
         }
     }
