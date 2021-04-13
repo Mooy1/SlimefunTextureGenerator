@@ -6,7 +6,7 @@ This is for Optifine only!
 
 if anyone knows how to add flat textures with optifine to player heads, please let me know on discord/github.
 
-Latest Download: https://github.com/Mooy1/SlimefunTextureGenerator/releases/download/1.0/SlimefunTextureGenerator.v1.0.jar
+Download Latest: https://github.com/Mooy1/SlimefunTextureGenerator/releases/download/1.1/SlimefunTextureGenerator.v1.1.jar
 
 # Changelog
 
