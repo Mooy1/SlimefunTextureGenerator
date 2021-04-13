@@ -4,11 +4,15 @@ This generator will create a texture pack and generate properties files for item
 
 This is for Optifine only!
 
-This doesn't currently work with Player Heads.
-
 if anyone knows how to add flat textures with optifine to player heads, please let me know on discord/github.
 
 Latest Download: https://github.com/Mooy1/SlimefunTextureGenerator/releases/download/1.0/SlimefunTextureGenerator.v1.0.jar
+
+# Changelog
+
+1.0: First Release
+
+1.1: You can now have item textures for player heads
 
 # How to use
 
